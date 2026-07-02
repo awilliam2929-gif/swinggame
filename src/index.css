@@ -622,6 +622,156 @@ table {
   font-size: 0.85rem;
 }
 
+/* ---------- history & charts ---------- */
+
+.career-table th,
+.career-table td,
+.log-table th,
+.log-table td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-size: 0.92rem;
+}
+
+.career-table tbody tr {
+  cursor: pointer;
+}
+
+.career-table tbody tr:hover {
+  background: #f3f7f2;
+}
+
+.career-table tbody tr.selected {
+  background: #e5f4e9;
+}
+
+.num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-col {
+  width: 30%;
+  min-width: 120px;
+}
+
+.diverge-bar {
+  display: flex;
+  height: 14px;
+}
+
+.diverge-bar .half {
+  flex: 1;
+  display: flex;
+  position: relative;
+}
+
+.diverge-bar .half.left {
+  justify-content: flex-end;
+  border-right: 1px solid #b9c2bb;
+}
+
+.diverge-bar .bar {
+  height: 100%;
+}
+
+.diverge-bar .bar.pos {
+  background: var(--money);
+  border-radius: 0 4px 4px 0;
+}
+
+.diverge-bar .bar.neg {
+  background: var(--blood);
+  border-radius: 4px 0 0 4px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.swatch.pos {
+  background: var(--money);
+}
+
+.swatch.neg {
+  background: var(--blood);
+}
+
+.chart-wrap {
+  position: relative;
+}
+
+.line-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.line-chart .grid {
+  stroke: #e2ded0;
+  stroke-width: 1;
+}
+
+.line-chart .grid.zero {
+  stroke: #b9c2bb;
+  stroke-dasharray: 4 3;
+}
+
+.line-chart .axis-label {
+  font-size: 11px;
+  fill: #6b7a6e;
+}
+
+.line-chart .series-line {
+  fill: none;
+  stroke: var(--felt);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.line-chart .series-dot {
+  fill: var(--felt);
+  stroke: var(--card);
+  stroke-width: 2;
+}
+
+.line-chart .end-label {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.line-chart .end-label.pos {
+  fill: var(--money);
+}
+
+.line-chart .end-label.neg {
+  fill: var(--blood);
+}
+
+.chart-tip {
+  position: absolute;
+  transform: translate(-50%, -115%);
+  background: var(--ink);
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.78rem;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  z-index: 5;
+}
+
+.chart-tip .tip-title {
+  font-weight: 700;
+}
+
 /* ---------- misc ---------- */
 
 .gameday-list {

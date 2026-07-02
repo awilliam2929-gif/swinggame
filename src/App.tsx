@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import GameDaySetup from './screens/GameDaySetup'
+import History from './screens/History'
 import Results from './screens/Results'
 import Roster from './screens/Roster'
 import ScoreEntry from './screens/ScoreEntry'
@@ -11,6 +12,7 @@ const TABS = [
   { id: 'scores', label: '✏️ Scores' },
   { id: 'results', label: '🏆 Results' },
   { id: 'payup', label: '💸 Pay Up' },
+  { id: 'history', label: '📈 History' },
   { id: 'roster', label: '🧑‍🤝‍🧑 Roster' },
 ] as const
 
@@ -51,6 +53,7 @@ function Shell() {
         {tab === 'scores' && <ScoreEntry />}
         {tab === 'results' && <Results />}
         {tab === 'payup' && <Settlement />}
+        {tab === 'history' && <History />}
         {tab === 'roster' && <Roster />}
       </main>
       <footer className="footer">
