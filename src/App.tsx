@@ -1,17 +1,69 @@
-function App() {
+import { useState } from 'react'
+import GameDaySetup from './screens/GameDaySetup'
+import Results from './screens/Results'
+import Roster from './screens/Roster'
+import ScoreEntry from './screens/ScoreEntry'
+import Settlement from './screens/Settlement'
+import { AppProvider, useCurrentGameDay } from './store/AppContext'
+
+const TABS = [
+  { id: 'gameday', label: '📅 Game Day' },
+  { id: 'scores', label: '✏️ Scores' },
+  { id: 'results', label: '🏆 Results' },
+  { id: 'payup', label: '💸 Pay Up' },
+  { id: 'roster', label: '🧑‍🤝‍🧑 Roster' },
+] as const
+
+type TabId = (typeof TABS)[number]['id']
+
+function Shell() {
+  const [tab, setTab] = useState<TabId>('gameday')
+  const gameDay = useCurrentGameDay()
+
   return (
-    <main style={{ maxWidth: 640, margin: '0 auto', padding: '4rem 1.5rem' }}>
-      <h1 style={{ color: '#1e5c31' }}>Swing Game</h1>
-      <p>
-        Golf betting tracker — Swing Game, skins, and side bets with automatic
-        settlement.
-      </p>
-      <p>
-        <strong>Status:</strong> the calculation engine is built and tested.
-        Score entry and results screens are coming next.
-      </p>
-    </main>
+    <div className="shell">
+      <header className="masthead">
+        <h1>
+          ⛳ SWING GAME
+          <span className="tagline">friendships tested weekly</span>
+        </h1>
+        {gameDay && (
+          <span className="current-day">
+            {gameDay.date}
+            {gameDay.course ? ` · ${gameDay.course}` : ''} ·{' '}
+            {gameDay.holeCount} holes
+          </span>
+        )}
+      </header>
+      <nav className="tabs">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={tab === t.id ? 'tab active' : 'tab'}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
+      <main className="content">
+        {tab === 'gameday' && <GameDaySetup />}
+        {tab === 'scores' && <ScoreEntry />}
+        {tab === 'results' && <Results />}
+        {tab === 'payup' && <Settlement />}
+        {tab === 'roster' && <Roster />}
+      </main>
+      <footer className="footer">
+        Gross scores. Real money. Fake friends. 🏌️
+      </footer>
+    </div>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <AppProvider>
+      <Shell />
+    </AppProvider>
+  )
+}
