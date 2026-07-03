@@ -199,256 +199,282 @@ export default function GameDaySetup() {
     gameDay.swingEntrantIds.includes(p.id),
   )
 
+  const parHalves =
+    gameDay.holeCount === 18
+      ? [
+          { label: 'Out', start: 0, count: 9 },
+          { label: 'In', start: 9, count: 9 },
+        ]
+      : [{ label: 'Front', start: 0, count: gameDay.holeCount }]
+
   return (
-    <section>
+    <section className="gameday-setup">
       <header className="screen-header">
-        <h2>📅 Game Day</h2>
+        <h2>Game Day</h2>
         <p className="subtitle">
           Set the table. Every dollar owed later starts with a toggle here.
         </p>
       </header>
 
-      <div className="card">
-        <h3>The basics</h3>
-        <div className="field-row">
-          <label>
-            Date
-            <input
-              type="date"
-              value={gameDay.date}
-              onChange={(e) => update({ date: e.target.value })}
-            />
-          </label>
-          <label className="course-field">
-            Course
-            <CourseFinder
-              value={gameDay.course}
-              savedCourses={state.courses}
-              onNameChange={(course) => update({ course, courseId: undefined })}
-              onSelect={selectCourse}
-            />
-          </label>
-          <label>
-            Holes
-            <div className="segmented">
-              {([9, 18] as const).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={gameDay.holeCount === n ? 'seg active' : 'seg'}
-                  onClick={() => setHoleCount(n)}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </label>
-        </div>
-
-        <div className="par-layout-row">
-          {savedLayoutHint && <p className="hint">{savedLayoutHint}</p>}
-          <button
-            type="button"
-            className="btn small"
-            disabled={!gameDay.course.trim()}
-            onClick={saveCourseLayout}
-          >
-            Save par layout for this course
-          </button>
-        </div>
-        <p className="hint">
-          Set par for each hole once — next time you pick this course from saved
-          courses, the layout loads automatically. You can still edit anything
-          here.
-        </p>
-
-        <h4>Par by hole</h4>
-        <div className="par-grid">
-          {gameDay.pars.slice(0, gameDay.holeCount).map((par, i) => (
-            <label key={i} className="par-cell">
-              <span>{i + 1}</span>
-              <select
-                value={par}
-                onChange={(e) => {
-                  const pars = [...gameDay.pars]
-                  pars[i] = Number(e.target.value)
-                  update({ pars })
-                }}
-              >
-                {[3, 4, 5, 6].map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="card">
-        <h3>Who showed up ({attendees.length})</h3>
-        {sortedPlayers.length === 0 && (
-          <p className="empty-note">
-            Roster's empty. Add players below or on the Roster tab.
-          </p>
-        )}
-        <div className="chip-grid">
-          {sortedPlayers.map((p) => {
-            const checked = gameDay.attendeeIds.includes(p.id)
-            return (
-              <button
-                key={p.id}
-                type="button"
-                className={checked ? 'chip active' : 'chip'}
-                onClick={() => toggleAttendee(p)}
-              >
-                <span className={`class-dot class-${p.playerClass}`} />
-                {playerLabel(p)}
-              </button>
-            )
-          })}
-        </div>
-        <button
-          className="btn small"
-          style={{ marginTop: '0.75rem' }}
-          onClick={() => setShowQuickAdd((v) => !v)}
-        >
-          {showQuickAdd ? 'Hide quick add' : '+ New face showed up'}
-        </button>
-        {showQuickAdd && (
-          <PlayerForm
-            onSave={(p) => {
-              dispatch({ type: 'addPlayer', player: p })
-              update({ attendeeIds: [...gameDay.attendeeIds, p.id] })
-            }}
-          />
-        )}
-      </div>
-
-      <div className="card">
-        <h3>🎰 The Swing Game</h3>
-        <label className="toggle-row">
-          <input
-            type="checkbox"
-            checked={gameDay.swing.enabled}
-            onChange={(e) =>
-              update({ swing: { ...gameDay.swing, enabled: e.target.checked } })
-            }
-          />
-          <span>Swing Game is ON</span>
-        </label>
-
-        {gameDay.swing.enabled && (
-          <>
+      <div className="desktop-split desktop-split-gameday">
+        <div className="desktop-split-main">
+          <div className="card">
+            <h3>The basics</h3>
             <div className="field-row">
               <label>
-                $ per hole
+                Date
                 <input
-                  type="number"
-                  min="0"
-                  step="0.25"
-                  value={gameDay.swing.dollarsPerHole}
-                  onChange={(e) =>
-                    update({
-                      swing: {
-                        ...gameDay.swing,
-                        dollarsPerHole: Number(e.target.value) || 0,
-                      },
-                    })
-                  }
+                  type="date"
+                  value={gameDay.date}
+                  onChange={(e) => update({ date: e.target.value })}
+                />
+              </label>
+              <label className="course-field">
+                Course
+                <CourseFinder
+                  value={gameDay.course}
+                  savedCourses={state.courses}
+                  onNameChange={(course) => update({ course, courseId: undefined })}
+                  onSelect={selectCourse}
                 />
               </label>
               <label>
-                Downs (0 = off)
-                <input
-                  type="number"
-                  min="0"
-                  max="9"
-                  value={gameDay.swing.downsN}
-                  onChange={(e) =>
-                    update({
-                      swing: {
-                        ...gameDay.swing,
-                        downsN: Math.max(0, Number(e.target.value) || 0),
-                      },
-                    })
-                  }
-                />
-              </label>
-              <label className="toggle-row">
-                <input
-                  type="checkbox"
-                  checked={gameDay.swing.stacking}
-                  onChange={(e) =>
-                    update({
-                      swing: { ...gameDay.swing, stacking: e.target.checked },
-                    })
-                  }
-                />
-                <span>
-                  Stacking downs{' '}
-                  <small>(every extra loss on the streak spawns another bet)</small>
-                </span>
+                Holes
+                <div className="segmented">
+                  {([9, 18] as const).map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className={gameDay.holeCount === n ? 'seg active' : 'seg'}
+                      onClick={() => setHoleCount(n)}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
               </label>
             </div>
 
-            <h4>In the pot ({entrants.length})</h4>
+            <div className="par-layout-row">
+              {savedLayoutHint && <p className="hint">{savedLayoutHint}</p>}
+              <button
+                type="button"
+                className="btn small"
+                disabled={!gameDay.course.trim()}
+                onClick={saveCourseLayout}
+              >
+                Save par layout for this course
+              </button>
+            </div>
             <p className="hint">
-              Tap everyone who threw a ball in. Then crown the two who got
-              drawn — that's the Swing Team.
+              Set par for each hole once — next time you pick this course from saved
+              courses, the layout loads automatically. You can still edit anything
+              here.
             </p>
-            <div className="chip-grid">
-              {attendees.map((p) => {
-                const inPot = gameDay.swingEntrantIds.includes(p.id)
-                const onTeam = gameDay.swingTeamIds.includes(p.id)
+
+            <h4 className="section-label">Par by hole</h4>
+            <div className="par-scorecard">
+              {parHalves.map(({ label, start, count }) => (
+                <div key={label} className="par-scorecard-nine">
+                  {gameDay.holeCount === 18 && (
+                    <div className="par-scorecard-label">{label}</div>
+                  )}
+                  <div className="par-scorecard-row">
+                    {Array.from({ length: count }, (_, i) => {
+                      const hole = start + i
+                      return (
+                        <label key={hole} className="par-scorecard-cell">
+                          <span className="par-hole-num">{hole + 1}</span>
+                          <select
+                            value={gameDay.pars[hole]}
+                            onChange={(e) => {
+                              const pars = [...gameDay.pars]
+                              pars[hole] = Number(e.target.value)
+                              update({ pars })
+                            }}
+                          >
+                            {[3, 4, 5, 6].map((v) => (
+                              <option key={v} value={v}>
+                                {v}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="desktop-split-aside">
+          <div className="card">
+            <h3>Who showed up ({attendees.length})</h3>
+            {sortedPlayers.length === 0 && (
+              <p className="empty-note">
+                Roster&apos;s empty. Add players below or on the Roster tab.
+              </p>
+            )}
+            <div className="chip-grid chip-grid-dense">
+              {sortedPlayers.map((p) => {
+                const checked = gameDay.attendeeIds.includes(p.id)
                 return (
-                  <span key={p.id} className="entrant-chip">
-                    <button
-                      type="button"
-                      className={inPot ? 'chip active' : 'chip'}
-                      onClick={() => toggleSwingEntrant(p.id)}
-                    >
-                      <span className={`class-dot class-${p.playerClass}`} />
-                      {playerLabel(p)}
-                    </button>
-                    {inPot && (
-                      <button
-                        type="button"
-                        title="On the Swing Team"
-                        className={onTeam ? 'crown active' : 'crown'}
-                        onClick={() => toggleSwingTeam(p.id)}
-                      >
-                        👑
-                      </button>
-                    )}
-                  </span>
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={checked ? 'chip active' : 'chip'}
+                    onClick={() => toggleAttendee(p)}
+                  >
+                    <span className={`class-dot class-${p.playerClass}`} />
+                    {playerLabel(p)}
+                  </button>
                 )
               })}
             </div>
-            {gameDay.swingTeamIds.length === 2 && (
-              <p className="swing-team-banner">
-                👑 Swing Team:{' '}
-                <strong>
-                  {gameDay.swingTeamIds
-                    .map((id) => {
-                      const p = state.players.find((pl) => pl.id === id)
-                      return p ? playerLabel(p) : '?'
-                    })
-                    .join(' & ')}
-                </strong>{' '}
-                vs. literally everybody. Godspeed.
-              </p>
+            <button
+              type="button"
+              className="btn small quick-add-toggle"
+              onClick={() => setShowQuickAdd((v) => !v)}
+            >
+              {showQuickAdd ? 'Hide quick add' : '+ New face showed up'}
+            </button>
+            {showQuickAdd && (
+              <PlayerForm
+                onSave={(p) => {
+                  dispatch({ type: 'addPlayer', player: p })
+                  update({ attendeeIds: [...gameDay.attendeeIds, p.id] })
+                }}
+              />
             )}
-          </>
-        )}
-      </div>
+          </div>
 
-      <SideBetsSetup
-        gameDay={gameDay}
-        attendees={attendees}
-        onChange={(sideBets) => update({ sideBets })}
-      />
+          <div className="card">
+            <h3>The Swing Game</h3>
+            <label className="toggle-row">
+              <input
+                type="checkbox"
+                checked={gameDay.swing.enabled}
+                onChange={(e) =>
+                  update({ swing: { ...gameDay.swing, enabled: e.target.checked } })
+                }
+              />
+              <span>Swing Game is ON</span>
+            </label>
+
+            {gameDay.swing.enabled && (
+              <>
+                <div className="field-row">
+                  <label>
+                    $ per hole
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.25"
+                      value={gameDay.swing.dollarsPerHole}
+                      onChange={(e) =>
+                        update({
+                          swing: {
+                            ...gameDay.swing,
+                            dollarsPerHole: Number(e.target.value) || 0,
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Downs (0 = off)
+                    <input
+                      type="number"
+                      min="0"
+                      max="9"
+                      value={gameDay.swing.downsN}
+                      onChange={(e) =>
+                        update({
+                          swing: {
+                            ...gameDay.swing,
+                            downsN: Math.max(0, Number(e.target.value) || 0),
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                  <label className="toggle-row">
+                    <input
+                      type="checkbox"
+                      checked={gameDay.swing.stacking}
+                      onChange={(e) =>
+                        update({
+                          swing: { ...gameDay.swing, stacking: e.target.checked },
+                        })
+                      }
+                    />
+                    <span>
+                      Stacking downs{' '}
+                      <small>(every extra loss on the streak spawns another bet)</small>
+                    </span>
+                  </label>
+                </div>
+
+                <h4 className="section-label">In the pot ({entrants.length})</h4>
+                <p className="hint">
+                  Tap everyone who threw a ball in. Then crown the two who got
+                  drawn — that&apos;s the Swing Team.
+                </p>
+                <div className="chip-grid chip-grid-dense">
+                  {attendees.map((p) => {
+                    const inPot = gameDay.swingEntrantIds.includes(p.id)
+                    const onTeam = gameDay.swingTeamIds.includes(p.id)
+                    return (
+                      <span key={p.id} className="entrant-chip">
+                        <button
+                          type="button"
+                          className={inPot ? 'chip active' : 'chip'}
+                          onClick={() => toggleSwingEntrant(p.id)}
+                        >
+                          <span className={`class-dot class-${p.playerClass}`} />
+                          {playerLabel(p)}
+                        </button>
+                        {inPot && (
+                          <button
+                            type="button"
+                            title="On the Swing Team"
+                            className={onTeam ? 'crown active' : 'crown'}
+                            onClick={() => toggleSwingTeam(p.id)}
+                          >
+                            👑
+                          </button>
+                        )}
+                      </span>
+                    )
+                  })}
+                </div>
+                {gameDay.swingTeamIds.length === 2 && (
+                  <p className="swing-team-banner">
+                    👑 Swing Team:{' '}
+                    <strong>
+                      {gameDay.swingTeamIds
+                        .map((id) => {
+                          const p = state.players.find((pl) => pl.id === id)
+                          return p ? playerLabel(p) : '?'
+                        })
+                        .join(' & ')}
+                    </strong>{' '}
+                    vs. literally everybody. Godspeed.
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
+          <SideBetsSetup
+            gameDay={gameDay}
+            attendees={attendees}
+            onChange={(sideBets) => update({ sideBets })}
+          />
+        </div>
+      </div>
 
       <div className="card danger-zone">
         <button

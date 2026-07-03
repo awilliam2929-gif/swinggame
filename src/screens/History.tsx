@@ -122,109 +122,124 @@ export default function History() {
   const selected = selectedId ? stats.get(selectedId) : null
 
   return (
-    <section>
+    <section className="history-screen">
       <header className="screen-header">
-        <h2>📈 History</h2>
+        <h2>History</h2>
         <p className="subtitle">
           The long con. Every game day logged, every dollar remembered.
         </p>
       </header>
 
-      <div className="card">
-        <h3>💰 Career money (Swing Game)</h3>
-        {board.length === 0 ? (
-          <p className="empty-note">
-            No completed game days yet. History is written by the winners —
-            once there's history.
-          </p>
-        ) : (
-          <>
-            <p className="hint">
-              Tap a player to see their money graph. Won{' '}
-              <span className="swatch pos" /> · lost <span className="swatch neg" />
-            </p>
-            <table className="career-table">
-              <thead>
-                <tr>
-                  <th>Player</th>
-                  <th className="num">Rounds</th>
-                  <th className="num">Birdies</th>
-                  <th className="num">Eagles+</th>
-                  <th className="num">vs par /18</th>
-                  <th className="bar-col"></th>
-                  <th className="num">Net</th>
-                </tr>
-              </thead>
-              <tbody>
-                {board.map((s) => (
-                  <tr
-                    key={s.playerId}
-                    className={selectedId === s.playerId ? 'selected' : ''}
-                    onClick={() =>
-                      setSelectedId(selectedId === s.playerId ? null : s.playerId)
-                    }
-                  >
-                    <td className="nickname">{name(s.playerId)}</td>
-                    <td className="num">{s.roundsPlayed}</td>
-                    <td className="num">{s.birdies}</td>
-                    <td className="num">{s.eaglesOrBetter > 0 ? s.eaglesOrBetter : '—'}</td>
-                    <td className="num">
-                      {s.vsParPer18 == null
-                        ? '—'
-                        : `${s.vsParPer18 >= 0 ? '+' : ''}${s.vsParPer18.toFixed(1)}`}
-                    </td>
-                    <td className="bar-col">
-                      <div className="diverge-bar">
-                        <div className="half left">
-                          {s.swingNet < 0 && (
-                            <div
-                              className="bar neg"
-                              style={{ width: `${(Math.abs(s.swingNet) / maxAbs) * 100}%` }}
-                            />
-                          )}
-                        </div>
-                        <div className="half right">
-                          {s.swingNet > 0 && (
-                            <div
-                              className="bar pos"
-                              style={{ width: `${(s.swingNet / maxAbs) * 100}%` }}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className={`num net ${s.swingNet > 0.005 ? 'pos' : s.swingNet < -0.005 ? 'neg' : ''}`}>
-                      {signedMoney(s.swingNet)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        )}
+      <div className="desktop-split desktop-split-history">
+        <div className="desktop-split-main">
+          <div className="card">
+            <h3>Career money (Swing Game)</h3>
+            {board.length === 0 ? (
+              <p className="empty-note">
+                No completed game days yet. History is written by the winners —
+                once there&apos;s history.
+              </p>
+            ) : (
+              <>
+                <p className="hint">
+                  Click a player to see their money graph. Won{' '}
+                  <span className="swatch pos" /> · lost <span className="swatch neg" />
+                </p>
+                <table className="career-table">
+                  <thead>
+                    <tr>
+                      <th>Player</th>
+                      <th className="num">Rounds</th>
+                      <th className="num">Birdies</th>
+                      <th className="num">Eagles+</th>
+                      <th className="num">vs par /18</th>
+                      <th className="bar-col"></th>
+                      <th className="num">Net</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {board.map((s) => (
+                      <tr
+                        key={s.playerId}
+                        className={selectedId === s.playerId ? 'selected' : ''}
+                        onClick={() =>
+                          setSelectedId(selectedId === s.playerId ? null : s.playerId)
+                        }
+                      >
+                        <td className="nickname">{name(s.playerId)}</td>
+                        <td className="num">{s.roundsPlayed}</td>
+                        <td className="num">{s.birdies}</td>
+                        <td className="num">{s.eaglesOrBetter > 0 ? s.eaglesOrBetter : '—'}</td>
+                        <td className="num">
+                          {s.vsParPer18 == null
+                            ? '—'
+                            : `${s.vsParPer18 >= 0 ? '+' : ''}${s.vsParPer18.toFixed(1)}`}
+                        </td>
+                        <td className="bar-col">
+                          <div className="diverge-bar">
+                            <div className="half left">
+                              {s.swingNet < 0 && (
+                                <div
+                                  className="bar neg"
+                                  style={{ width: `${(Math.abs(s.swingNet) / maxAbs) * 100}%` }}
+                                />
+                              )}
+                            </div>
+                            <div className="half right">
+                              {s.swingNet > 0 && (
+                                <div
+                                  className="bar pos"
+                                  style={{ width: `${(s.swingNet / maxAbs) * 100}%` }}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className={`num net ${s.swingNet > 0.005 ? 'pos' : s.swingNet < -0.005 ? 'neg' : ''}`}>
+                          {signedMoney(s.swingNet)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="desktop-split-aside desktop-sticky-aside">
+          {selected && selected.cumulative.length > 0 ? (
+            <div className="card history-detail-panel">
+              <h3>
+                {name(selected.playerId)} — cumulative (
+                {selected.swingDays} {selected.swingDays === 1 ? 'day' : 'days'})
+              </h3>
+              <CumulativeChart
+                points={selected.cumulative}
+                name={name(selected.playerId)}
+              />
+            </div>
+          ) : selected && selected.cumulative.length === 0 ? (
+            <div className="card history-detail-panel">
+              <h3>{name(selected.playerId)}</h3>
+              <p className="empty-note">
+                Scores logged but no completed Swing Game days yet.
+              </p>
+            </div>
+          ) : (
+            <div className="card history-detail-panel history-detail-empty">
+              <h3>Player chart</h3>
+              <p className="hint">
+                Select a player from the career table to see their cumulative swing
+                money over time.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {selected && selected.cumulative.length > 0 && (
-        <div className="card">
-          <h3>
-            📉 {name(selected.playerId)} — cumulative damage (
-            {selected.swingDays} {selected.swingDays === 1 ? 'day' : 'days'})
-          </h3>
-          <CumulativeChart
-            points={selected.cumulative}
-            name={name(selected.playerId)}
-          />
-        </div>
-      )}
-      {selected && selected.cumulative.length === 0 && (
-        <p className="empty-note">
-          {name(selected.playerId)} has scores logged but no completed Swing
-          Game days yet.
-        </p>
-      )}
-
       <div className="card">
-        <h3>📅 Game day log</h3>
+        <h3>Game day log</h3>
         {summaries.length === 0 ? (
           <p className="empty-note">Nothing logged yet.</p>
         ) : (
