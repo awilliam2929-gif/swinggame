@@ -5,7 +5,8 @@ import Results from './screens/Results'
 import Roster from './screens/Roster'
 import ScoreEntry from './screens/ScoreEntry'
 import Settlement from './screens/Settlement'
-import { AppProvider, useCurrentGameDay } from './store/AppContext'
+import AuthGate from './components/AuthGate'
+import { AppProvider, useApp, useCurrentGameDay } from './store/AppContext'
 
 const TABS = [
   { id: 'gameday', label: 'Game Day' },
@@ -18,10 +19,19 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
+const SYNC_LABELS = {
+  idle: null,
+  syncing: '☁️ saving…',
+  synced: '☁️ saved',
+  error: '⚠️ sync error — data kept locally',
+} as const
+
 function Shell() {
   const [tab, setTab] = useState<TabId>('gameday')
   const gameDay = useCurrentGameDay()
+  const { session, syncStatus, signOut } = useApp()
   const isLanding = tab === 'gameday' && !gameDay
+  const syncLabel = session ? SYNC_LABELS[syncStatus] : null
 
   return (
     <div className="app">
@@ -85,7 +95,15 @@ function Shell() {
           {tab === 'roster' && <Roster />}
         </main>
         <footer className="footer">
-          Gross scores. Real money. Fake friends.
+          <span>Gross scores. Real money. Fake friends.</span>
+          {syncLabel && (
+            <span className={`sync-chip ${syncStatus}`}>{syncLabel}</span>
+          )}
+          {session && (
+            <button type="button" className="link-btn" onClick={signOut}>
+              Sign out
+            </button>
+          )}
         </footer>
       </div>
     </div>
@@ -95,7 +113,9 @@ function Shell() {
 export default function App() {
   return (
     <AppProvider>
-      <Shell />
+      <AuthGate>
+        <Shell />
+      </AuthGate>
     </AppProvider>
   )
 }

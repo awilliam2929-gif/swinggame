@@ -1,10 +1,21 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useReducer,
+  useRef,
+  useState,
   type ReactNode,
 } from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
+import {
+  fetchRemoteState,
+  mergeStates,
+  SyncEngine,
+  type SyncStatus,
+} from '../sync/sync'
 import { loadState, saveState } from './storage'
 import type { AppState, GameDay, Player, SavedCourse } from './types'
 
@@ -17,6 +28,7 @@ type Action =
   | { type: 'selectGameDay'; id: string | null }
   | { type: 'removeGameDay'; id: string }
   | { type: 'rememberCourse'; course: SavedCourse }
+  | { type: 'hydrate'; state: AppState }
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -76,23 +88,101 @@ function reducer(state: AppState, action: Action): AppState {
         courses: [next, ...without].slice(0, 40),
       }
     }
+    case 'hydrate':
+      return action.state
   }
 }
 
 interface AppContextValue {
   state: AppState
   dispatch: (action: Action) => void
+  /** Null when Supabase isn't configured or nobody is signed in. */
+  session: Session | null
+  /** False until the stored session (if any) has been checked. */
+  authReady: boolean
+  syncStatus: SyncStatus
+  signOut: () => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, loadState)
+  const [session, setSession] = useState<Session | null>(null)
+  const [authReady, setAuthReady] = useState(!supabase)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
+  const engineRef = useRef<SyncEngine | null>(null)
+  const stateRef = useRef(state)
+  stateRef.current = state
+
+  // Always keep the local cache — it's the offline copy and the whole
+  // store in local-only mode.
   useEffect(() => {
     saveState(state)
   }, [state])
+
+  // Track the Supabase session.
+  useEffect(() => {
+    if (!supabase) return
+    void supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setAuthReady(true)
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s)
+    })
+    return () => sub.subscription.unsubscribe()
+  }, [])
+
+  // On sign-in: pull the group's data, merge (server wins per entity,
+  // local-only survives), then start write-through sync. Local-only
+  // entities get pushed up by the first push() after prime().
+  useEffect(() => {
+    if (!supabase || !session) {
+      engineRef.current?.stop()
+      engineRef.current = null
+      if (supabase) setSyncStatus('idle')
+      return
+    }
+    let cancelled = false
+    setSyncStatus('syncing')
+    void fetchRemoteState()
+      .then((remote) => {
+        if (cancelled) return
+        const merged = mergeStates(stateRef.current, remote)
+        const engine = new SyncEngine(setSyncStatus)
+        // Baseline is the REMOTE view; pushing the merged state right
+        // after uploads anything the server didn't have yet.
+        engine.prime({ ...merged, ...remote })
+        engineRef.current = engine
+        dispatch({ type: 'hydrate', state: merged })
+        engine.push(merged)
+        setSyncStatus('synced')
+      })
+      .catch((err) => {
+        console.error('Failed to load group data:', err)
+        if (!cancelled) setSyncStatus('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [session])
+
+  // Push every state change through the engine (no-op until primed).
+  useEffect(() => {
+    engineRef.current?.push(state)
+  }, [state])
+
+  const signOut = useCallback(() => {
+    engineRef.current?.stop()
+    engineRef.current = null
+    void supabase?.auth.signOut()
+  }, [])
+
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider
+      value={{ state, dispatch, session, authReady, syncStatus, signOut }}
+    >
       {children}
     </AppContext.Provider>
   )
