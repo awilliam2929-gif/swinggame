@@ -78,36 +78,71 @@ export default function GameDaySetup() {
 
   if (!gameDay) {
     return (
-      <section>
-        <header className="screen-header">
-          <h2>📅 Game Day</h2>
-          <p className="subtitle">No game day going. Fix that.</p>
-        </header>
-        <button
-          className="btn primary big"
-          onClick={() =>
-            dispatch({ type: 'createGameDay', gameDay: newGameDay() })
-          }
-        >
-          ⛳ Start a new game day
-        </button>
-        {state.gameDays.length > 0 && (
-          <div className="card" style={{ marginTop: '1.5rem' }}>
-            <h3>Old game days</h3>
-            <ul className="gameday-list">
-              {state.gameDays.map((g) => (
-                <li key={g.id}>
-                  <button
-                    className="btn"
-                    onClick={() => dispatch({ type: 'selectGameDay', id: g.id })}
-                  >
-                    {g.date} {g.course && `— ${g.course}`}
-                  </button>
-                </li>
-              ))}
+      <section className="landing">
+        <div className="landing-cta">
+          <button
+            type="button"
+            className="btn cta"
+            onClick={() =>
+              dispatch({ type: 'createGameDay', gameDay: newGameDay() })
+            }
+          >
+            Start a new game day
+            <span className="cta-arrow" aria-hidden="true">
+              →
+            </span>
+          </button>
+        </div>
+
+        <div className="landing-grid">
+          <div className="landing-copy">
+            <p className="landing-eyebrow">Your group&apos;s</p>
+            <h2 className="landing-headline">
+              Premier destination for golf betting
+            </h2>
+            <p className="landing-body">
+              One scorekeeper enters everyone&apos;s gross scores after the
+              round. The site handles the Swing Game, side bets, and the final
+              who-pays-whom sheet — so you can argue about swings, not math.
+            </p>
+            <ul className="landing-features">
+              <li>Swing Team vs. every two-man combo</li>
+              <li>Hole-by-hole stakes with auto downs</li>
+              <li>Netted settlement — no making change</li>
             </ul>
           </div>
-        )}
+
+          <aside className="landing-aside">
+            <div className="landing-photo-frame">
+              <div className="landing-photo" aria-hidden="true" />
+              <span className="landing-photo-badge">Simulate. Practice. Improve.</span>
+            </div>
+
+            {state.gameDays.length > 0 && (
+              <div className="card landing-history">
+                <h3>Pick up where you left off</h3>
+                <ul className="gameday-list">
+                  {state.gameDays.map((g) => (
+                    <li key={g.id}>
+                      <button
+                        type="button"
+                        className="btn history-btn"
+                        onClick={() =>
+                          dispatch({ type: 'selectGameDay', id: g.id })
+                        }
+                      >
+                        <span className="history-date">{g.date}</span>
+                        {g.course && (
+                          <span className="history-course">{g.course}</span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </aside>
+        </div>
       </section>
     )
   }
