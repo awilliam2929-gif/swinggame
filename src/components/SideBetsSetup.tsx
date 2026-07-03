@@ -61,22 +61,14 @@ export default function SideBetsSetup({
     patch({ birdies: { ...sideBets.birdies, ...partial } })
   }
 
-  function patchGreenies(partial: Partial<SideBetsSettings['greenies']>) {
-    patch({ greenies: { ...sideBets.greenies, ...partial } })
-  }
-
-  const anyEnabled =
-    sideBets.skins.enabled ||
-    sideBets.birdies.enabled ||
-    sideBets.greenies.enabled
+  const anyEnabled = sideBets.skins.enabled || sideBets.birdies.enabled
 
   return (
     <div className="card">
       <h3>Side bets</h3>
       <p className="hint">
-        Toggle the day&apos;s side games and who&apos;s in each pot. Payout
-        math lands on Results and Pay Up in the next update — setup saves here
-        now.
+        Toggle the day&apos;s side games and who&apos;s in each pot. Payouts
+        show up live on Results and Pay Up.
       </p>
 
       <div className="side-bet-block">
@@ -86,7 +78,7 @@ export default function SideBetsSetup({
             checked={sideBets.skins.enabled}
             onChange={(e) => patchSkins({ enabled: e.target.checked })}
           />
-          <span>Skins (pot)</span>
+          <span>Skins &amp; greenies (pot)</span>
         </label>
         {sideBets.skins.enabled && (
           <>
@@ -103,8 +95,22 @@ export default function SideBetsSetup({
                   }
                 />
               </label>
+              <label className="toggle-row">
+                <input
+                  type="checkbox"
+                  checked={sideBets.skins.greenies}
+                  onChange={(e) => patchSkins({ greenies: e.target.checked })}
+                />
+                <span>
+                  Greenies included{' '}
+                  <small>
+                    (CTP on par 3s — each greenie is one share of the pot,
+                    same as a skin)
+                  </small>
+                </span>
+              </label>
             </div>
-            <h4>In the skins game</h4>
+            <h4>In the pot</h4>
             <EntrantChips
               attendees={attendees}
               entrantIds={sideBets.skins.entrantIds}
@@ -114,6 +120,12 @@ export default function SideBetsSetup({
                 })
               }
             />
+            {sideBets.skins.greenies && (
+              <p className="hint">
+                Enter each par-3&apos;s closest-to-the-pin winner on the Scores
+                tab.
+              </p>
+            )}
           </>
         )}
       </div>
@@ -177,49 +189,6 @@ export default function SideBetsSetup({
                 })
               }
             />
-          </>
-        )}
-      </div>
-
-      <div className="side-bet-block">
-        <label className="toggle-row side-bet-toggle">
-          <input
-            type="checkbox"
-            checked={sideBets.greenies.enabled}
-            onChange={(e) => patchGreenies({ enabled: e.target.checked })}
-          />
-          <span>Closest to the pin (greenies)</span>
-        </label>
-        {sideBets.greenies.enabled && (
-          <>
-            <div className="field-row">
-              <label>
-                $ per winner
-                <input
-                  type="number"
-                  min="0"
-                  step="0.25"
-                  value={sideBets.greenies.amount}
-                  onChange={(e) =>
-                    patchGreenies({ amount: Number(e.target.value) || 0 })
-                  }
-                />
-              </label>
-            </div>
-            <h4>In this bet</h4>
-            <EntrantChips
-              attendees={attendees}
-              entrantIds={sideBets.greenies.entrantIds}
-              onToggle={(pid) =>
-                patchGreenies({
-                  entrantIds: toggleEntrant(sideBets.greenies.entrantIds, pid),
-                })
-              }
-            />
-            <p className="hint">
-              Par-3 winners get entered on the Scores tab once that&apos;s wired
-              up.
-            </p>
           </>
         )}
       </div>

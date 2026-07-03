@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
+import { netPayments } from '../engine/settle'
 import { useApp, useCurrentGameDay } from '../store/AppContext'
 import { playerLabel } from '../store/types'
-import { computeSwing } from '../ui/compute'
+import { computeSideBets, computeSwing } from '../ui/compute'
 import { seedFrom, settleLine } from '../ui/flavor'
-import { money } from '../ui/money'
+import { money, signedMoney } from '../ui/money'
 import { teamPaymentsFromMatches } from '../ui/teamPayments'
 import SideBetsSummary from '../components/SideBetsSummary'
 
@@ -15,8 +16,12 @@ export default function Settlement() {
     () => (gameDay ? computeSwing(gameDay, state.players) : null),
     [gameDay, state.players],
   )
+  const sideBets = useMemo(
+    () => (gameDay ? computeSideBets(gameDay) : null),
+    [gameDay],
+  )
 
-  if (!gameDay || !computation) {
+  if (!gameDay || !computation || !sideBets) {
     return (
       <section>
         <header className="screen-header">
@@ -27,6 +32,12 @@ export default function Settlement() {
     )
   }
 
+  const byId = new Map(state.players.map((p) => [p.id, p]))
+  const name = (id: string) => {
+    const p = byId.get(id)
+    return p ? playerLabel(p) : '(deleted player)'
+  }
+
   if (!computation.ok) {
     return (
       <section>
@@ -35,16 +46,24 @@ export default function Settlement() {
           <p className="subtitle">The final damage, team by team.</p>
         </header>
         <p className="empty-note">⏳ {computation.reason}</p>
+        <SideBetsSummary gameDay={gameDay} players={state.players} />
       </section>
     )
   }
 
-  const byId = new Map(state.players.map((p) => [p.id, p]))
-  const name = (id: string) => {
-    const p = byId.get(id)
-    return p ? playerLabel(p) : '(deleted player)'
-  }
   const payments = teamPaymentsFromMatches(computation.result, name)
+
+  // Grand total: swing + every side bet, one number per player, then the
+  // fewest possible hand-offs to settle the whole day.
+  const totalNet: Record<string, number> = { ...computation.result.playerNet }
+  for (const [pid, v] of Object.entries(sideBets.playerNet)) {
+    totalNet[pid] = (totalNet[pid] ?? 0) + v
+  }
+  const totals = Object.entries(totalNet)
+    .map(([id, net]) => ({ id, net }))
+    .sort((a, b) => b.net - a.net)
+  const bottomLine = netPayments(totalNet)
+  const hasSideBets = Object.keys(sideBets.playerNet).length > 0
 
   return (
     <section>
@@ -54,6 +73,7 @@ export default function Settlement() {
       </header>
 
       <div className="card">
+        <h3>Swing Game — team by team</h3>
         {payments.length === 0 ? (
           <p className="empty-note">
             Dead even on every match. Boring. Play for more next time.
@@ -73,12 +93,50 @@ export default function Settlement() {
         )}
         <p className="hint">
           One line per opposing team vs. the Swing Team — both names on each
-          side. Matches that finished even are omitted. Skins, greenies, and
-          birdie money join this sheet in a later version.
+          side. Matches that finished even are omitted.
         </p>
       </div>
 
       <SideBetsSummary gameDay={gameDay} players={state.players} />
+
+      <div className="card">
+        <h3>🧾 The bottom line — everything combined</h3>
+        <p className="hint">
+          Swing Game{hasSideBets ? ' + side bets' : ''}, one number per player,
+          settled in the fewest hand-offs.
+        </p>
+        <table className="board-table">
+          <tbody>
+            {totals.map(({ id, net }) => (
+              <tr key={id}>
+                <td className="nickname">{name(id)}</td>
+                <td
+                  className={`net ${net > 0.005 ? 'pos' : net < -0.005 ? 'neg' : ''}`}
+                >
+                  {signedMoney(net)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {bottomLine.length === 0 ? (
+          <p className="empty-note">
+            Everyone's square. A statistical miracle.
+          </p>
+        ) : (
+          <ul className="payments">
+            {bottomLine.map((p, i) => (
+              <li key={i} className="payment">
+                <span className="payer">{name(p.from)}</span>
+                <span className="arrow">pays</span>
+                <span className="amount">{money(p.amount)}</span>
+                <span className="arrow">to</span>
+                <span className="payee">{name(p.to)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   )
 }

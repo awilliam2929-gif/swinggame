@@ -1,7 +1,9 @@
+import { computeBirdies, type BirdiesResult } from '../engine/birdies'
+import { computeSkins, type SkinsResult } from '../engine/skins'
 import { settleSwingGame } from '../engine/swing'
-import type { Scores, SwingGameResult } from '../engine/types'
+import type { PlayerId, Scores, SwingGameResult } from '../engine/types'
 import type { GameDay, Player } from '../store/types'
-import { playerLabel } from '../store/types'
+import { playerLabel, sideBetsFor } from '../store/types'
 
 export type SwingComputation =
   | { ok: true; result: SwingGameResult }
@@ -65,4 +67,50 @@ export function computeSwing(
   } catch (e) {
     return { ok: false, reason: e instanceof Error ? e.message : String(e) }
   }
+}
+
+export interface SideBetsComputation {
+  skins: SkinsResult | null
+  birdies: BirdiesResult | null
+  /** Combined side-bet net per player (zero-sum). */
+  playerNet: Record<PlayerId, number>
+}
+
+/** Run every enabled side bet for the day. Partial scores are fine. */
+export function computeSideBets(gameDay: GameDay): SideBetsComputation {
+  const sideBets = sideBetsFor(gameDay)
+  const playerNet: Record<PlayerId, number> = {}
+  const add = (net: Record<PlayerId, number>) => {
+    for (const [pid, v] of Object.entries(net)) {
+      playerNet[pid] = (playerNet[pid] ?? 0) + v
+    }
+  }
+
+  let skins: SkinsResult | null = null
+  if (sideBets.skins.enabled && sideBets.skins.entrantIds.length >= 2) {
+    skins = computeSkins({
+      scores: gameDay.scores,
+      entrantIds: sideBets.skins.entrantIds,
+      pars: gameDay.pars,
+      holeCount: gameDay.holeCount,
+      ante: sideBets.skins.ante,
+      greeniesEnabled: sideBets.skins.greenies,
+      greenieWinners: gameDay.greenieWinners ?? {},
+    })
+    add(skins.playerNet)
+  }
+
+  let birdies: BirdiesResult | null = null
+  if (sideBets.birdies.enabled && sideBets.birdies.entrantIds.length >= 2) {
+    birdies = computeBirdies({
+      scores: gameDay.scores,
+      entrantIds: sideBets.birdies.entrantIds,
+      pars: gameDay.pars,
+      holeCount: gameDay.holeCount,
+      amounts: sideBets.birdies,
+    })
+    add(birdies.playerNet)
+  }
+
+  return { skins, birdies, playerNet }
 }

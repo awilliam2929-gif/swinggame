@@ -1,5 +1,5 @@
 import { useApp, useCurrentGameDay } from '../store/AppContext'
-import { playerLabel } from '../store/types'
+import { playerLabel, sideBetsFor } from '../store/types'
 import { emptyLine, seedFrom } from '../ui/flavor'
 
 /** Color-code a score cell relative to par. */
@@ -137,8 +137,83 @@ export default function ScoreEntry() {
             <span className="score-bogey legend-chip">bogey</span>
             <span className="score-blowup legend-chip">other (yikes)</span>
           </div>
+          <GreenieEntry />
         </>
       )}
     </section>
+  )
+}
+
+/** One CTP winner pick per par 3, feeding the skins & greenies pot. */
+function GreenieEntry() {
+  const { state, dispatch } = useApp()
+  const gameDay = useCurrentGameDay()
+  if (!gameDay) return null
+
+  const sideBets = sideBetsFor(gameDay)
+  if (!sideBets.skins.enabled || !sideBets.skins.greenies) return null
+
+  const parThrees = gameDay.pars
+    .slice(0, gameDay.holeCount)
+    .map((par, i) => ({ par, hole: i }))
+    .filter(({ par }) => par === 3)
+
+  const potPlayers = state.players
+    .filter((p) => sideBets.skins.entrantIds.includes(p.id))
+    .sort((a, b) => playerLabel(a).localeCompare(playerLabel(b)))
+
+  function setWinner(hole: number, pid: string) {
+    if (!gameDay) return
+    dispatch({
+      type: 'updateGameDay',
+      gameDay: {
+        ...gameDay,
+        greenieWinners: {
+          ...gameDay.greenieWinners,
+          [hole]: pid === '' ? null : pid,
+        },
+      },
+    })
+  }
+
+  return (
+    <div className="card" style={{ marginTop: '1.1rem' }}>
+      <h3>🎯 Greenies (closest to the pin)</h3>
+      {parThrees.length === 0 ? (
+        <p className="hint">
+          No par 3s on the card — set hole pars on the Game Day tab first.
+        </p>
+      ) : potPlayers.length === 0 ? (
+        <p className="hint">
+          Nobody's in the skins pot yet — pick the pot players on the Game Day
+          tab.
+        </p>
+      ) : (
+        <>
+          <p className="hint">
+            Each greenie is one share of the skins pot. Leave blank if nobody
+            hit the green.
+          </p>
+          <div className="field-row">
+            {parThrees.map(({ hole }) => (
+              <label key={hole}>
+                Hole {hole + 1}
+                <select
+                  value={gameDay.greenieWinners?.[hole] ?? ''}
+                  onChange={(e) => setWinner(hole, e.target.value)}
+                >
+                  <option value="">— nobody</option>
+                  {potPlayers.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {playerLabel(p)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   )
 }
