@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import { loadState, saveState } from './storage'
-import type { AppState, GameDay, Player } from './types'
+import type { AppState, GameDay, Player, SavedCourse } from './types'
 
 type Action =
   | { type: 'addPlayer'; player: Player }
@@ -16,6 +16,7 @@ type Action =
   | { type: 'updateGameDay'; gameDay: GameDay }
   | { type: 'selectGameDay'; id: string | null }
   | { type: 'removeGameDay'; id: string }
+  | { type: 'rememberCourse'; course: SavedCourse }
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -57,6 +58,18 @@ function reducer(state: AppState, action: Action): AppState {
           state.currentGameDayId === action.id
             ? (gameDays[0]?.id ?? null)
             : state.currentGameDayId,
+      }
+    }
+    case 'rememberCourse': {
+      const now = new Date().toISOString()
+      const next = {
+        ...action.course,
+        lastUsed: now,
+      }
+      const without = state.courses.filter((c) => c.id !== next.id)
+      return {
+        ...state,
+        courses: [next, ...without].slice(0, 40),
       }
     }
   }

@@ -17,6 +17,17 @@ export interface SwingSettings {
   stacking: boolean
 }
 
+export interface SavedCourse {
+  id: string
+  name: string
+  city: string
+  state: string
+  subtitle: string
+  lat?: number
+  lng?: number
+  lastUsed: string
+}
+
 export interface GameDay {
   id: string
   date: string // yyyy-mm-dd
@@ -34,6 +45,7 @@ export interface GameDay {
 export interface AppState {
   players: Player[]
   gameDays: GameDay[]
+  courses: SavedCourse[]
   currentGameDayId: string | null
 }
 

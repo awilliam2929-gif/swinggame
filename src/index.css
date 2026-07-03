@@ -60,7 +60,7 @@ body {
   position: absolute;
   inset: 0;
   background:
-    url('/images/hero-bg.png') center 30% / cover no-repeat,
+    url('/images/hero-bg.jpg') center 55% / cover no-repeat,
     var(--charcoal);
 }
 
@@ -303,7 +303,7 @@ body {
   aspect-ratio: 4 / 5;
   min-height: 16rem;
   background:
-    url('/images/hero-bg.png') center 65% / cover no-repeat,
+    url('/images/hero-bg.jpg') center 70% / cover no-repeat,
     var(--felt-dark);
 }
 
@@ -492,6 +492,79 @@ label {
   gap: 0.25rem;
   font-size: 0.85rem;
   font-weight: 600;
+}
+
+.course-field {
+  flex: 1 1 16rem;
+  min-width: min(100%, 16rem);
+}
+
+.course-finder {
+  position: relative;
+}
+
+.course-input {
+  width: 100%;
+}
+
+.course-results {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(20, 20, 20, 0.12);
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.course-results-label,
+.course-results-status {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.course-results-status.error {
+  color: var(--blood);
+}
+
+.course-result {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.course-result:hover,
+.course-result:focus-visible {
+  background: rgba(168, 216, 48, 0.12);
+  outline: none;
+}
+
+.course-result-name {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.course-result-meta {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
 }
 
 .field-row {

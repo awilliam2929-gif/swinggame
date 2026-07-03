@@ -5,6 +5,7 @@ const KEY = 'swinggame-v1'
 const EMPTY: AppState = {
   players: [],
   gameDays: [],
+  courses: [],
   currentGameDayId: null,
 }
 
@@ -16,6 +17,7 @@ export function loadState(): AppState {
     return {
       players: parsed.players ?? [],
       gameDays: parsed.gameDays ?? [],
+      courses: parsed.courses ?? [],
       currentGameDayId: parsed.currentGameDayId ?? null,
     }
   } catch {

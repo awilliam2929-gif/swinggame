@@ -2,6 +2,14 @@
   command = "npm run build"
   publish = "dist"
 
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/course-search"
+  to = "/.netlify/functions/course-search"
+  status = 200
+
 # SPA fallback: all routes serve the app
 [[redirects]]
   from = "/*"

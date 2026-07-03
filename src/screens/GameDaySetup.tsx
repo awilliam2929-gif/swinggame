@@ -8,6 +8,7 @@ import {
   type Player,
 } from '../store/types'
 import { PlayerForm } from './Roster'
+import CourseFinder from '../components/CourseFinder'
 
 export default function GameDaySetup() {
   const { state, dispatch } = useApp()
@@ -174,12 +175,15 @@ export default function GameDaySetup() {
               onChange={(e) => update({ date: e.target.value })}
             />
           </label>
-          <label>
+          <label className="course-field">
             Course
-            <input
-              placeholder="Where the crime happened"
+            <CourseFinder
               value={gameDay.course}
-              onChange={(e) => update({ course: e.target.value })}
+              savedCourses={state.courses}
+              onChange={(course) => update({ course })}
+              onRemember={(course) =>
+                dispatch({ type: 'rememberCourse', course })
+              }
             />
           </label>
           <label>
