@@ -14,7 +14,7 @@ function OutcomeStrip({ match }: { match: MatchResult }) {
         <span
           key={i}
           className={`outcome outcome-${o.toLowerCase()}`}
-          title={`Hole ${i + 1}`}
+          title={`Hole ${i + 1}: ${o === 'SWING' ? 'Swing Team won' : o === 'OPP' ? 'Opponents won' : 'Push'}`}
         >
           {o === 'SWING' ? 'W' : o === 'OPP' ? 'L' : '–'}
         </span>
