@@ -160,7 +160,7 @@ export default function GameDaySetup() {
           <aside className="landing-aside">
             <div className="landing-photo-frame">
               <div className="landing-photo" aria-hidden="true" />
-              <span className="landing-photo-badge">Simulate. Practice. Improve.</span>
+              <span className="landing-photo-badge">Score. Bet. Settle.</span>
             </div>
 
             {state.gameDays.length > 0 && (
