@@ -4,13 +4,14 @@ import {
   formatCourseLabel,
   type CourseSearchResult,
 } from '../lib/courseSearch'
+import { formatSavedCourseMeta, mergeSavedCourse } from '../lib/courseLayout'
 import type { SavedCourse } from '../store/types'
 
 interface CourseFinderProps {
   value: string
   savedCourses: SavedCourse[]
-  onChange: (value: string) => void
-  onRemember: (course: SavedCourse) => void
+  onNameChange: (value: string) => void
+  onSelect: (course: SavedCourse) => void
 }
 
 function toSavedCourse(result: CourseSearchResult): SavedCourse {
@@ -34,8 +35,8 @@ function matchesQuery(course: SavedCourse, query: string): boolean {
 export default function CourseFinder({
   value,
   savedCourses,
-  onChange,
-  onRemember,
+  onNameChange,
+  onSelect,
 }: CourseFinderProps) {
   const listId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -106,25 +107,24 @@ export default function CourseFinder({
     return sorted.filter((course) => matchesQuery(course, trimmed)).slice(0, 6)
   }, [query, savedCourses])
 
-  function selectSaved(course: SavedCourse) {
+  function pickCourse(course: SavedCourse) {
     const label = formatCourseLabel(course)
     setQuery(label)
-    onChange(label)
-    onRemember(course)
+    onSelect(course)
     setOpen(false)
+  }
+
+  function selectSaved(course: SavedCourse) {
+    pickCourse(course)
   }
 
   function selectRemote(result: CourseSearchResult) {
-    const saved = toSavedCourse(result)
-    const label = formatCourseLabel(saved)
-    setQuery(label)
-    onChange(label)
-    onRemember(saved)
-    setOpen(false)
+    const existing = savedCourses.find((c) => c.id === result.id)
+    pickCourse(mergeSavedCourse(existing, toSavedCourse(result)))
   }
 
   function commitManualValue() {
-    onChange(query.trim())
+    onNameChange(query.trim())
     setOpen(false)
   }
 
@@ -152,7 +152,7 @@ export default function CourseFinder({
         onFocus={() => setOpen(true)}
         onChange={(e) => {
           setQuery(e.target.value)
-          onChange(e.target.value)
+          onNameChange(e.target.value)
           setOpen(true)
         }}
         onKeyDown={(e) => {
@@ -172,23 +172,26 @@ export default function CourseFinder({
         <ul className="course-results" id={listId} role="listbox">
           {showSaved && (
             <>
-              <li className="course-results-label">Recent courses</li>
-              {savedMatches.map((course) => (
-                <li key={`saved-${course.id}`}>
-                  <button
-                    type="button"
-                    className="course-result"
-                    role="option"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => selectSaved(course)}
-                  >
-                    <span className="course-result-name">{course.name}</span>
-                    {course.subtitle && (
-                      <span className="course-result-meta">{course.subtitle}</span>
-                    )}
-                  </button>
-                </li>
-              ))}
+              <li className="course-results-label">Saved courses</li>
+              {savedMatches.map((course) => {
+                const meta = formatSavedCourseMeta(course)
+                return (
+                  <li key={`saved-${course.id}`}>
+                    <button
+                      type="button"
+                      className="course-result"
+                      role="option"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => selectSaved(course)}
+                    >
+                      <span className="course-result-name">{course.name}</span>
+                      <span className="course-result-meta">
+                        {[course.subtitle, meta].filter(Boolean).join(' · ')}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
             </>
           )}
 
@@ -199,22 +202,26 @@ export default function CourseFinder({
               {error && <li className="course-results-status error">{error}</li>}
               {!loading &&
                 !error &&
-                remoteResults.map((result) => (
-                  <li key={`remote-${result.id}`}>
-                    <button
-                      type="button"
-                      className="course-result"
-                      role="option"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => selectRemote(result)}
-                    >
-                      <span className="course-result-name">{result.name}</span>
-                      {result.subtitle && (
-                        <span className="course-result-meta">{result.subtitle}</span>
-                      )}
-                    </button>
-                  </li>
-                ))}
+                remoteResults.map((result) => {
+                  const existing = savedCourses.find((c) => c.id === result.id)
+                  const meta = existing ? formatSavedCourseMeta(existing) : null
+                  return (
+                    <li key={`remote-${result.id}`}>
+                      <button
+                        type="button"
+                        className="course-result"
+                        role="option"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => selectRemote(result)}
+                      >
+                        <span className="course-result-name">{result.name}</span>
+                        <span className="course-result-meta">
+                          {[result.subtitle, meta].filter(Boolean).join(' · ')}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
             </>
           )}
 

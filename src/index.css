@@ -567,6 +567,15 @@ label {
   color: var(--ink-muted);
 }
 
+.par-layout-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 0.75rem 0 0.35rem;
+}
+
 .field-row {
   display: flex;
   flex-wrap: wrap;
@@ -960,12 +969,27 @@ table {
 
 .payment {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.6rem;
-  padding: 0.7rem 0.4rem;
+  padding: 0.85rem 0.4rem;
   border-bottom: 1px dashed var(--line);
   font-size: 1.05rem;
   flex-wrap: wrap;
+}
+
+.team-payment .payer,
+.team-payment .payee {
+  flex: 1 1 10rem;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.team-payment .payer {
+  text-align: right;
+}
+
+.team-payment .payee {
+  text-align: left;
 }
 
 .payer {
@@ -1112,8 +1136,9 @@ table {
 }
 
 .line-chart .end-label {
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .line-chart .end-label.pos {
@@ -1122,6 +1147,64 @@ table {
 
 .line-chart .end-label.neg {
   fill: var(--blood);
+}
+
+.side-bet-block {
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.side-bet-block:first-of-type {
+  border-top: none;
+  padding-top: 0.25rem;
+}
+
+.side-bet-toggle {
+  margin-bottom: 0.5rem;
+}
+
+.side-bet-empty {
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}
+
+.side-bet-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.side-bet-summary-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  background: #fafaf8;
+}
+
+.side-bet-summary-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+}
+
+.side-bet-summary-detail {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.side-bet-summary-roster {
+  margin: 0.35rem 0 0;
+}
+
+.side-bet-pending {
+  margin: 0.35rem 0 0;
+  font-style: italic;
 }
 
 .chart-tip {

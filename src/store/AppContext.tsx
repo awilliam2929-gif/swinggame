@@ -62,8 +62,12 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'rememberCourse': {
       const now = new Date().toISOString()
-      const next = {
+      const existing = state.courses.find((c) => c.id === action.course.id)
+      const next: SavedCourse = {
+        ...existing,
         ...action.course,
+        pars: action.course.pars ?? existing?.pars,
+        holeCount: action.course.holeCount ?? existing?.holeCount,
         lastUsed: now,
       }
       const without = state.courses.filter((c) => c.id !== next.id)

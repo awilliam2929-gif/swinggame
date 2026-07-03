@@ -74,8 +74,10 @@ function CumulativeChart({
         ))}
         {last && (
           <text
-            x={x(points.length - 1) + 10} y={y(last.cum) + 4}
+            x={Math.min(x(points.length - 1) + 10, W - PAD.right - 48)}
+            y={y(last.cum) + 4}
             className={`end-label ${last.cum >= 0 ? 'pos' : 'neg'}`}
+            textAnchor="start"
           >
             {signedMoney(last.cum)}
           </text>
@@ -147,6 +149,7 @@ export default function History() {
                   <th>Player</th>
                   <th className="num">Rounds</th>
                   <th className="num">Birdies</th>
+                  <th className="num">Eagles+</th>
                   <th className="num">vs par /18</th>
                   <th className="bar-col"></th>
                   <th className="num">Net</th>
@@ -163,10 +166,8 @@ export default function History() {
                   >
                     <td className="nickname">{name(s.playerId)}</td>
                     <td className="num">{s.roundsPlayed}</td>
-                    <td className="num">
-                      {s.birdies}
-                      {s.eaglesOrBetter > 0 && ` 🦅${s.eaglesOrBetter}`}
-                    </td>
+                    <td className="num">{s.birdies}</td>
+                    <td className="num">{s.eaglesOrBetter > 0 ? s.eaglesOrBetter : '—'}</td>
                     <td className="num">
                       {s.vsParPer18 == null
                         ? '—'

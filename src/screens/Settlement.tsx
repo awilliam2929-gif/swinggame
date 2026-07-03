@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
-import { netPayments } from '../engine/settle'
 import { useApp, useCurrentGameDay } from '../store/AppContext'
 import { playerLabel } from '../store/types'
 import { computeSwing } from '../ui/compute'
 import { seedFrom, settleLine } from '../ui/flavor'
 import { money } from '../ui/money'
+import { teamPaymentsFromMatches } from '../ui/teamPayments'
+import SideBetsSummary from '../components/SideBetsSummary'
 
 export default function Settlement() {
   const { state } = useApp()
@@ -31,7 +32,7 @@ export default function Settlement() {
       <section>
         <header className="screen-header">
           <h2>💸 Pay Up</h2>
-          <p className="subtitle">The final damage, netted down.</p>
+          <p className="subtitle">The final damage, team by team.</p>
         </header>
         <p className="empty-note">⏳ {computation.reason}</p>
       </section>
@@ -43,7 +44,7 @@ export default function Settlement() {
     const p = byId.get(id)
     return p ? playerLabel(p) : '(deleted player)'
   }
-  const payments = netPayments(computation.result.playerNet)
+  const payments = teamPaymentsFromMatches(computation.result, name)
 
   return (
     <section>
@@ -55,27 +56,29 @@ export default function Settlement() {
       <div className="card">
         {payments.length === 0 ? (
           <p className="empty-note">
-            Dead even across the board. Boring. Play for more next time.
+            Dead even on every match. Boring. Play for more next time.
           </p>
         ) : (
           <ul className="payments">
-            {payments.map((p, i) => (
-              <li key={i} className="payment">
-                <span className="payer">{name(p.from)}</span>
+            {payments.map((payment) => (
+              <li key={payment.id} className="payment team-payment">
+                <span className="payer">{payment.fromLabel}</span>
                 <span className="arrow">pays</span>
-                <span className="amount">{money(p.amount)}</span>
+                <span className="amount">{money(payment.amount)}</span>
                 <span className="arrow">to</span>
-                <span className="payee">{name(p.to)}</span>
+                <span className="payee">{payment.toLabel}</span>
               </li>
             ))}
           </ul>
         )}
         <p className="hint">
-          Netted to the fewest possible hand-offs. Swing Game only for now —
-          skins, greenies, and birdie money join this sheet in the next
-          version.
+          One line per opposing team vs. the Swing Team — both names on each
+          side. Matches that finished even are omitted. Skins, greenies, and
+          birdie money join this sheet in a later version.
         </p>
       </div>
+
+      <SideBetsSummary gameDay={gameDay} players={state.players} />
     </section>
   )
 }

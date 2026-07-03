@@ -9,6 +9,14 @@ import {
 } from '../store/types'
 import { PlayerForm } from './Roster'
 import CourseFinder from '../components/CourseFinder'
+import SideBetsSetup from '../components/SideBetsSetup'
+import {
+  applySavedCourseToGameDay,
+  layoutFromGameDay,
+  parTotal,
+  savedCourseFromManual,
+} from '../lib/courseLayout'
+import type { SavedCourse } from '../store/types'
 
 export default function GameDaySetup() {
   const { state, dispatch } = useApp()
@@ -19,6 +27,42 @@ export default function GameDaySetup() {
     if (!gameDay) return
     dispatch({ type: 'updateGameDay', gameDay: { ...gameDay, ...patch } })
   }
+
+  function selectCourse(course: SavedCourse) {
+    if (!gameDay) return
+    dispatch({
+      type: 'updateGameDay',
+      gameDay: applySavedCourseToGameDay(gameDay, course),
+    })
+    dispatch({
+      type: 'rememberCourse',
+      course: { ...course, lastUsed: new Date().toISOString() },
+    })
+  }
+
+  function saveCourseLayout() {
+    if (!gameDay || !gameDay.course.trim()) return
+    const layout = layoutFromGameDay(gameDay)
+    const existing = gameDay.courseId
+      ? state.courses.find((c) => c.id === gameDay.courseId)
+      : undefined
+    const course: SavedCourse = existing
+      ? { ...existing, ...layout, lastUsed: new Date().toISOString() }
+      : savedCourseFromManual(gameDay.course, layout)
+
+    dispatch({ type: 'rememberCourse', course })
+    if (!gameDay.courseId) {
+      update({ courseId: course.id })
+    }
+  }
+
+  const linkedCourse = gameDay?.courseId
+    ? state.courses.find((c) => c.id === gameDay.courseId)
+    : undefined
+  const savedLayoutHint =
+    linkedCourse?.pars && linkedCourse.holeCount
+      ? `Saved layout: par ${parTotal(linkedCourse.pars, linkedCourse.holeCount)} (${linkedCourse.holeCount} holes)`
+      : null
 
   // Arrays only grow so switching 18 -> 9 -> 18 never loses entered data;
   // screens and the engine read just the first holeCount entries.
@@ -180,10 +224,8 @@ export default function GameDaySetup() {
             <CourseFinder
               value={gameDay.course}
               savedCourses={state.courses}
-              onChange={(course) => update({ course })}
-              onRemember={(course) =>
-                dispatch({ type: 'rememberCourse', course })
-              }
+              onNameChange={(course) => update({ course, courseId: undefined })}
+              onSelect={selectCourse}
             />
           </label>
           <label>
@@ -202,6 +244,23 @@ export default function GameDaySetup() {
             </div>
           </label>
         </div>
+
+        <div className="par-layout-row">
+          {savedLayoutHint && <p className="hint">{savedLayoutHint}</p>}
+          <button
+            type="button"
+            className="btn small"
+            disabled={!gameDay.course.trim()}
+            onClick={saveCourseLayout}
+          >
+            Save par layout for this course
+          </button>
+        </div>
+        <p className="hint">
+          Set par for each hole once — next time you pick this course from saved
+          courses, the layout loads automatically. You can still edit anything
+          here.
+        </p>
 
         <h4>Par by hole</h4>
         <div className="par-grid">
@@ -384,6 +443,12 @@ export default function GameDaySetup() {
           </>
         )}
       </div>
+
+      <SideBetsSetup
+        gameDay={gameDay}
+        attendees={attendees}
+        onChange={(sideBets) => update({ sideBets })}
+      />
 
       <div className="card danger-zone">
         <button

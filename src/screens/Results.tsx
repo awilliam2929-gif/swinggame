@@ -3,6 +3,7 @@ import type { MatchResult } from '../engine/types'
 import { useApp, useCurrentGameDay } from '../store/AppContext'
 import { playerLabel } from '../store/types'
 import { computeSwing } from '../ui/compute'
+import SideBetsSummary from '../components/SideBetsSummary'
 import { loserLine, seedFrom, winnerLine } from '../ui/flavor'
 import { signedMoney } from '../ui/money'
 
@@ -184,6 +185,8 @@ export default function Results() {
           </details>
         ))}
       </div>
+
+      <SideBetsSummary gameDay={gameDay} players={state.players} />
     </section>
   )
 }
